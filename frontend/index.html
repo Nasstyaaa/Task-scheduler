@@ -2,9 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Task scheduler</title>
+    <title>Task Scheduler</title>
+    <script>
+        // Отправляем запрос к серверу при загрузке страницы
+        function fetchData() {
+
+            fetch('http://localhost:8765/main/test', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+
+        }
+
+        // Вызываем fetchData при загрузке страницы
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
 </head>
 <body>
-Frontend
+<h1>Task Scheduler</h1>
+<p>Frontend</p>
+<div>
+    <strong>Ответ от сервера:</strong>
+    <pre id="result">Загрузка...</pre>
+</div>
 </body>
 </html>
