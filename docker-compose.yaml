@@ -15,8 +15,23 @@ services:
       interval: 10s
       retries: 3
       timeout: 10s
+    networks:
+      - task-tracker
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: ../frontend/Dockerfile
+    container_name: frontend
+    ports:
+      - "80:80"
+    networks:
+      - task-tracker
+
+
 volumes:
   minio_storage: {}
+
 networks:
-  default:
+  task-tracker:
     driver: bridge
