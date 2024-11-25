@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/main")
+@RequestMapping("/user")
 @AllArgsConstructor
-public class TestController {
+public class RegistrationController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/test")
+    @GetMapping
     public ResponseEntity<List<User>> test(){
         return ResponseEntity.ok(userRepository.findAll());
     }
