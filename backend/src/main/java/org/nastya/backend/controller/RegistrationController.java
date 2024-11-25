@@ -1,6 +1,7 @@
 package org.nastya.backend.controller;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.nastya.backend.model.User;
 import org.nastya.backend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RegistrationController {
 
     private final UserRepository userRepository;
