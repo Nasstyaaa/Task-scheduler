@@ -15,7 +15,7 @@ public class JwtIssuer {
 
     private final JwtProperties jwtProperties;
 
-    public String issue(int userId, String username, String email){
+    public String issue(Integer userId, String username, String email){
         return JWT.create()
                 .withSubject(String.valueOf(userId))
                 .withExpiresAt(Instant.now().plus(Duration.of(1, ChronoUnit.DAYS)))
