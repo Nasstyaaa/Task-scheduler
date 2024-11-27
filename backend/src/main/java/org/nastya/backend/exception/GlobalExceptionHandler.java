@@ -12,7 +12,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidJwtTokenException.class)
     public ResponseEntity<Map<String, String>> handleInvalidJwtTokenException(InvalidJwtTokenException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message",e.getMessage()));
     }
 }

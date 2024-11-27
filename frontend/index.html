@@ -68,24 +68,36 @@
             // Функция для проверки данных пользователя
             function checkAndFetchData() {
                 const token = localStorage.getItem('jwtToken');
+                if (!token) {
+                    $('#loginModal').fadeIn(); // Показываем модальное окно логина, если нет токена
+                    return;
+                }
 
                 $.ajax({
-                    url: 'http://localhost:8765/user',
+                    url: 'http://localhost:8765/user', // Маршрут для получения данных
                     method: 'GET',
                     headers: {
-                        'Authorization': 'Bearer ' + token,
+                        'Authorization': 'Bearer ' + token, // Добавляем токен в заголовок
                         'Content-Type': 'application/json'
                     },
                     success: function (data) {
-                        console.log('User data received:', data);
-                        alert('User data: ' + JSON.stringify(data));
+                        // Здесь можно обработать данные пользователя
+                        alert('User data: ' + JSON.stringify(data)); // Пример: вывод данных
                     },
                     error: function (xhr) {
-                        if (xhr.status === 401 || xhr.status === 403) {
-                            console.warn('Unauthorized or Forbidden - showing login modal.');
+                        if (xhr.status === 403 && xhr.responseJSON && xhr.responseJSON.message) {
+                            // Невалидный токен: удаляем токен и показываем сообщение
+                            localStorage.removeItem('jwtToken');
                             $('#loginModal').fadeIn(); // Показываем модальное окно логина
+                            $('#loginError').text(xhr.responseJSON.message); // Показываем сообщение сервера
+                        } else if (xhr.status === 401) {
+                            // Для кода 401 можно аналогично удалить токен и показать окно логина
+                            localStorage.removeItem('jwtToken');
+                            $('#loginModal').fadeIn();
+                            $('#loginError').text('Authentication required. Please log in.');
                         } else {
-                            alert('An error occurred while fetching data.');
+                            // Другие ошибки
+                            alert('Failed to fetch user data. Please try again.');
                         }
                     }
                 });
@@ -96,7 +108,7 @@
 
             // Логика для отправки формы логина
             $('#loginForm').submit(function (event) {
-                event.preventDefault();
+                event.preventDefault(); // Отключаем стандартное поведение формы
 
                 const formData = {
                     username: $('#loginUsername').val(),
@@ -111,20 +123,20 @@
                     success: function (response, textStatus, xhr) {
                         const authHeader = xhr.getResponseHeader('Authorization');
                         if (authHeader && authHeader.startsWith('Bearer ')) {
-                            const token = authHeader.substring(7);
-                            localStorage.setItem('jwtToken', token);
-                            $('#loginModal').fadeOut();
+                            const token = authHeader.substring(7); // Извлекаем токен после "Bearer "
+                            localStorage.setItem('jwtToken', token); // Сохраняем токен
                             $('#loginError').text('');
-                            checkAndFetchData();
+                            $('#loginModal').fadeOut(); // Закрываем окно логина
+                            checkAndFetchData(); // Загружаем данные пользователя
                         } else {
-                            alert('Login successful but no token received!');
+                            alert('Login successful, but no token received.');
                         }
                     },
                     error: function (xhr) {
-                        if (xhr.status === 401) {
-                            $('#loginError').text('Invalid username or password.');
+                        if (xhr.status === 401 || xhr.status === 403) {
+                            $('#loginError').text(xhr.responseJSON.message || 'Invalid username or password.');
                         } else {
-                            $('#loginError').text('An error occurred. Please try again.');
+                            $('#loginError').text('An unexpected error occurred. Please try again.');
                         }
                     }
                 });
@@ -132,7 +144,7 @@
 
             // Логика для отправки формы регистрации
             $('#registrationForm').submit(function (event) {
-                event.preventDefault();
+                event.preventDefault(); // Отключаем стандартное поведение формы
 
                 const formData = {
                     username: $('#regUsername').val(),
@@ -148,20 +160,24 @@
                     success: function (response, textStatus, xhr) {
                         const authHeader = xhr.getResponseHeader('Authorization');
                         if (authHeader && authHeader.startsWith('Bearer ')) {
-                            const token = authHeader.substring(7);
-                            localStorage.setItem('jwtToken', token);
-                            $('#registrationModal').fadeOut(); // Скрываем окно регистрации
-                            $('#registrationError').text('');
-                            checkAndFetchData(); // Повторяем запрос данных
+                            const token = authHeader.substring(7); // Извлекаем токен из заголовка
+                            localStorage.setItem('jwtToken', token); // Сохраняем токен
+                            $('#registrationModal').fadeOut(); // Закрываем модальное окно регистрации
+                            checkAndFetchData(); // Загружаем данные пользователя
                         } else {
-                            alert('Registration successful but no token received!');
+                            alert('Registration successful, but no token received. Please log in.');
                         }
                     },
                     error: function (xhr) {
-                        if (xhr.status === 409) {
-                            $('#registrationError').text('User already exists.');
+                        // Проверяем, есть ли ошибки в теле ответа
+                        if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
+                            const errorMessages = xhr.responseJSON.errors;
+                            $('#registrationError').html(errorMessages.join('<br>')); // Выводим список ошибок
+                        } else if (xhr.status === 409) {
+                            // Обработка ошибки конфликта (например, пользователь уже существует)
+                            $('#registrationError').text(xhr.responseJSON.message);
                         } else {
-                            $('#registrationError').text('An error occurred during registration.');
+                            $('#registrationError').text('An unexpected error occurred.');
                         }
                     }
                 });

@@ -1,5 +1,6 @@
 package org.nastya.backend.controller;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.nastya.backend.dto.RegistrationRequest;
@@ -16,10 +17,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.Binding;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -30,8 +35,17 @@ public class RegistrationController {
     private final JwtIssuer jwtIssuer;
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> register(@RequestBody RegistrationRequest request){
+    public ResponseEntity<?> register(@RequestBody @Valid RegistrationRequest request, BindingResult bindingResult){
         try {
+            if (bindingResult.hasErrors()) {
+                List<String> errors = bindingResult.getFieldErrors()
+                        .stream()
+                        .map(FieldError::getDefaultMessage)
+                        .toList();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("errors", errors));
+            }
+
             RegistrationResponse response = registrationService.register(request);
             String jwt = jwtIssuer.issue(response.getId(), response.getUsername(), response.getEmail());
             return ResponseEntity.ok()
