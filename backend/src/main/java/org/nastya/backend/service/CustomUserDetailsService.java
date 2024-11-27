@@ -26,6 +26,7 @@ public class CustomUserDetailsService implements org.springframework.security.co
                 .id(user.getId())
                 .email(user.getEmail())
                 .username(user.getUsername())
+                .password(user.getPassword())
                 .build();
     }
 }

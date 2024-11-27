@@ -24,8 +24,8 @@ public class AuthenticationController {
     private final JwtIssuer jwtIssuer;
     private final AuthenticationManager authenticationManager;
 
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public ResponseEntity<?> login(@ModelAttribute LoginRequest loginRequest) {
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
