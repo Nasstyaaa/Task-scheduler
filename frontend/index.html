@@ -112,10 +112,10 @@
                         const authHeader = xhr.getResponseHeader('Authorization');
                         if (authHeader && authHeader.startsWith('Bearer ')) {
                             const token = authHeader.substring(7);
-                            localStorage.setItem('jwtToken', token); // Сохраняем токен
-                            $('#loginModal').fadeOut(); // Скрываем окно логина
+                            localStorage.setItem('jwtToken', token);
+                            $('#loginModal').fadeOut();
                             $('#loginError').text('');
-                            checkAndFetchData(); // Повторяем запрос данных
+                            checkAndFetchData();
                         } else {
                             alert('Login successful but no token received!');
                         }

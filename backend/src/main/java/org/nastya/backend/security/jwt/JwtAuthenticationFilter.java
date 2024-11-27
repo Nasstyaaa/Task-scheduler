@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.nastya.backend.exception.InvalidJwtTokenException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,15 +25,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtToUserDetailsConverter jwtToUserDetailsConverter;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        extractTokenFromRequest(request)
-                .map(jwtDecoder::decode)
-                .map(jwtToUserDetailsConverter::convert)
-                .map(JwtAuthenticationToken::new)
-                .ifPresent(authentication -> SecurityContextHolder.getContext().setAuthentication(authentication));
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
+        try {
+            extractTokenFromRequest(request)
+                    .map(jwtDecoder::decode)
+                    .map(jwtToUserDetailsConverter::convert)
+                    .map(JwtAuthenticationToken::new)
+                    .ifPresent(authentication -> SecurityContextHolder.getContext().setAuthentication(authentication));
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            throw new InvalidJwtTokenException();
+        }
     }
 
     private Optional<String> extractTokenFromRequest(HttpServletRequest request){
