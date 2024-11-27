@@ -43,10 +43,14 @@ public class RegistrationController {
         }
     }
 
-//    @GetMapping
-//    public ResponseEntity<?> getUser(){
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        var principal = (CustomUserDetails) authentication.getPrincipal();
-//        return ResponseEntity.ok(principal);
-//    }
+    @GetMapping
+    public ResponseEntity<?> getUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        var principal = (CustomUserDetails) authentication.getPrincipal();
+        return ResponseEntity.ok(Map.of(
+                "id", principal.getId(),
+                "username", principal.getUsername(),
+                "email", principal.getEmail()
+        ));
+    }
 }

@@ -7,20 +7,20 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         /* Стили для модального окна */
-        #loginModal {
+        #loginModal, #registrationModal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
-            display: flex;
+            display: none; /* Скрыто по умолчанию */
             justify-content: center;
             align-items: center;
             z-index: 1000; /* Высокий приоритет */
         }
 
-        #loginModal .modal-content {
+        .modal-content {
             background-color: #fff;
             padding: 20px;
             border-radius: 5px;
@@ -28,18 +28,18 @@
             text-align: center;
         }
 
-        #loginModal .modal-content h2 {
+        .modal-content h2 {
             margin-bottom: 20px;
         }
 
-        #loginModal input {
+        .modal-content input {
             margin: 10px 0;
             padding: 10px;
             width: 100%;
             box-sizing: border-box;
         }
 
-        #loginModal button {
+        .modal-content button {
             margin-top: 10px;
             padding: 10px 20px;
             background-color: #007BFF;
@@ -49,19 +49,58 @@
             cursor: pointer;
         }
 
-        #loginModal button:hover {
+        .modal-content button:hover {
             background-color: #0056b3;
+        }
+
+        .modal-content p {
+            color: red;
+        }
+
+        .switch-link {
+            margin-top: 10px;
+            cursor: pointer;
+            color: #007BFF;
         }
     </style>
     <script>
         $(document).ready(function () {
-            // Отправка формы логина через Ajax
+            // Функция для проверки данных пользователя
+            function checkAndFetchData() {
+                const token = localStorage.getItem('jwtToken');
+
+                $.ajax({
+                    url: 'http://localhost:8765/user',
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    success: function (data) {
+                        console.log('User data received:', data);
+                        alert('User data: ' + JSON.stringify(data));
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401 || xhr.status === 403) {
+                            console.warn('Unauthorized or Forbidden - showing login modal.');
+                            $('#loginModal').fadeIn(); // Показываем модальное окно логина
+                        } else {
+                            alert('An error occurred while fetching data.');
+                        }
+                    }
+                });
+            }
+
+            // Вызываем функцию при загрузке страницы
+            checkAndFetchData();
+
+            // Логика для отправки формы логина
             $('#loginForm').submit(function (event) {
-                event.preventDefault(); // Отключаем стандартное поведение формы
+                event.preventDefault();
 
                 const formData = {
-                    username: $('#username').val(),
-                    password: $('#password').val()
+                    username: $('#loginUsername').val(),
+                    password: $('#loginPassword').val()
                 };
 
                 $.ajax({
@@ -69,19 +108,21 @@
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(formData),
-                    success: function (response) {
-                        // Успешный вход
-                        alert('Login successful! Token: ' + response);
-                        $('#loginError').text('');
-                        $('#loginModal').hide(); // Скрываем модальное окно
-                        fetchData(); // Загружаем данные пользователя
+                    success: function (response, textStatus, xhr) {
+                        const authHeader = xhr.getResponseHeader('Authorization');
+                        if (authHeader && authHeader.startsWith('Bearer ')) {
+                            const token = authHeader.substring(7);
+                            localStorage.setItem('jwtToken', token); // Сохраняем токен
+                            $('#loginModal').fadeOut(); // Скрываем окно логина
+                            $('#loginError').text('');
+                            checkAndFetchData(); // Повторяем запрос данных
+                        } else {
+                            alert('Login successful but no token received!');
+                        }
                     },
                     error: function (xhr) {
-                        // Обработка ошибок
                         if (xhr.status === 401) {
                             $('#loginError').text('Invalid username or password.');
-                        } else if (xhr.status === 403) {
-                            $('#loginError').text('Forbidden: Check your permissions.');
                         } else {
                             $('#loginError').text('An error occurred. Please try again.');
                         }
@@ -89,32 +130,55 @@
                 });
             });
 
-            // При загрузке страницы сразу отображаем модальное окно
-            $('#loginModal').show();
-        });
+            // Логика для отправки формы регистрации
+            $('#registrationForm').submit(function (event) {
+                event.preventDefault();
 
-        // Существующий скрипт для получения данных с сервера
-        function fetchData() {
-            fetch('http://localhost:8765/user', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch user data. Status: ' + response.status);
+                const formData = {
+                    username: $('#regUsername').val(),
+                    email: $('#regEmail').val(),
+                    password: $('#regPassword').val()
+                };
+
+                $.ajax({
+                    url: 'http://localhost:8765/user',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response, textStatus, xhr) {
+                        const authHeader = xhr.getResponseHeader('Authorization');
+                        if (authHeader && authHeader.startsWith('Bearer ')) {
+                            const token = authHeader.substring(7);
+                            localStorage.setItem('jwtToken', token);
+                            $('#registrationModal').fadeOut(); // Скрываем окно регистрации
+                            $('#registrationError').text('');
+                            checkAndFetchData(); // Повторяем запрос данных
+                        } else {
+                            alert('Registration successful but no token received!');
+                        }
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 409) {
+                            $('#registrationError').text('User already exists.');
+                        } else {
+                            $('#registrationError').text('An error occurred during registration.');
+                        }
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById('result').textContent = JSON.stringify(data, null, 2);
-                })
-                .catch(error => {
-                    document.getElementById('result').textContent = 'Error: ' + error.message;
-                    console.error('Error:', error);
                 });
-        }
+            });
+
+            // Переключение на форму регистрации
+            $('#switchToRegistration').click(function () {
+                $('#loginModal').fadeOut();
+                $('#registrationModal').fadeIn();
+            });
+
+            // Переключение на форму логина
+            $('#switchToLogin').click(function () {
+                $('#registrationModal').fadeOut();
+                $('#loginModal').fadeIn();
+            });
+        });
     </script>
 </head>
 <body>
@@ -126,18 +190,29 @@
     <div class="modal-content">
         <h2>Login</h2>
         <form id="loginForm">
-            <input type="text" id="username" name="username" placeholder="Username" required>
-            <input type="password" id="password" name="password" placeholder="Password" required>
+            <input type="text" id="loginUsername" name="username" placeholder="Username" required>
+            <input type="password" id="loginPassword" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
-        <p id="loginError" style="color: red;"></p> <!-- Сообщение об ошибке логина -->
+        <p id="loginError"></p>
+        <p id="switchToRegistration" class="switch-link">Don't have an account? Register</p>
     </div>
 </div>
 
-<!-- Секция для отображения данных -->
-<div>
-    <strong>Ответ от сервера:</strong>
-    <pre id="result">Загрузка...</pre>
+<!-- Модальное окно для регистрации -->
+<div id="registrationModal">
+    <div class="modal-content">
+        <h2>Register</h2>
+        <form id="registrationForm">
+            <input type="text" id="regUsername" name="username" placeholder="Username" required>
+            <input type="email" id="regEmail" name="email" placeholder="Email" required>
+            <input type="password" id="regPassword" name="password" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <p id="registrationError"></p>
+        <p id="switchToLogin" class="switch-link">Already have an account? Login</p>
+    </div>
 </div>
+
 </body>
 </html>

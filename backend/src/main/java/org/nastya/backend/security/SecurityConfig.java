@@ -1,5 +1,6 @@
 package org.nastya.backend.security;
 
+import jakarta.ws.rs.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.nastya.backend.security.jwt.JwtAuthenticationFilter;
 import org.nastya.backend.service.CustomUserDetailsService;
@@ -32,7 +33,9 @@ public class SecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user", "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/user").authenticated()
+                        .requestMatchers("/auth/login").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
