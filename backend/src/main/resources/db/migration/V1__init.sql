@@ -1,8 +1,10 @@
-CREATE TABLE users
+CREATE TABLE tasks
 (
-    id       INT AUTO_INCREMENT NOT NULL,
-    username VARCHAR(255)       NOT NULL,
-    password VARCHAR(250)       NOT NULL,
-    email    VARCHAR(50)        NOT NULL,
-    CONSTRAINT `PRIMARY` PRIMARY KEY (id)
+    header     VARCHAR(50)  NOT NULL,
+    text       VARCHAR(255) NOT NULL,
+    user_id    INT          NOT NULL,
+    status     BOOLEAN      NOT NULL,
+    done_time  TIMESTAMP    NULL,
+    CONSTRAINT PRIMARY KEY (header),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );

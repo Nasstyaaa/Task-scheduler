@@ -1,28 +1,25 @@
 package org.nastya.backend.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(unique = true)
-    @NonNull
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @NonNull
+    @Column(nullable = false)
     private String password;
 
-    @Column(unique = true)
-    @NonNull
+    @Column(unique = true, nullable = false)
     private String email;
 
 }
