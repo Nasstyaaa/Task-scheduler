@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Task {
     @Id
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String header;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String text;
 
     @Column(nullable = false)
