@@ -6,6 +6,27 @@
     <title>Task Scheduler</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        /* Стили для хедера */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        header .username {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
         /* Стили для модального окна */
         #loginModal, #registrationModal {
             position: fixed;
@@ -13,11 +34,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
-            display: none; /* Скрыто по умолчанию */
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* Высокий приоритет */
+            z-index: 1000;
         }
 
         .modal-content {
@@ -65,50 +86,57 @@
     </style>
     <script>
         $(document).ready(function () {
-            // Функция для проверки данных пользователя
             function checkAndFetchData() {
                 const token = localStorage.getItem('jwtToken');
                 if (!token) {
-                    $('#loginModal').fadeIn(); // Показываем модальное окно логина, если нет токена
+                    $('#loginModal').fadeIn();
+                    $('#logoutButton').hide(); // Hide the logout button if not logged in
                     return;
                 }
 
                 $.ajax({
-                    url: 'http://localhost:8765/user', // Маршрут для получения данных
+                    url: 'http://localhost:8765/user',
                     method: 'GET',
                     headers: {
-                        'Authorization': 'Bearer ' + token, // Добавляем токен в заголовок
+                        'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     },
                     success: function (data) {
-                        // Здесь можно обработать данные пользователя
-                        alert('User data: ' + JSON.stringify(data)); // Пример: вывод данных
+                        if (data.username) {
+                            $('.username').text(`Welcome, ${data.username}`);
+                            $('#logoutButton').show(); // Show the logout button if logged in
+                        }
                     },
                     error: function (xhr) {
                         if (xhr.status === 403 && xhr.responseJSON && xhr.responseJSON.message) {
-                            // Невалидный токен: удаляем токен и показываем сообщение
                             localStorage.removeItem('jwtToken');
-                            $('#loginModal').fadeIn(); // Показываем модальное окно логина
-                            $('#loginError').text(xhr.responseJSON.message); // Показываем сообщение сервера
+                            $('#loginModal').fadeIn();
+                            $('#loginError').text(xhr.responseJSON.message);
+                            $('#logoutButton').hide();
                         } else if (xhr.status === 401) {
-                            // Для кода 401 можно аналогично удалить токен и показать окно логина
                             localStorage.removeItem('jwtToken');
                             $('#loginModal').fadeIn();
                             $('#loginError').text('Authentication required. Please log in.');
+                            $('#logoutButton').hide();
                         } else {
-                            // Другие ошибки
                             alert('Failed to fetch user data. Please try again.');
                         }
                     }
                 });
             }
 
-            // Вызываем функцию при загрузке страницы
+            // Logout functionality
+            $('#logoutButton').click(function () {
+                localStorage.removeItem('jwtToken');
+                $('.username').text('Welcome, Guest');
+                $('#loginModal').fadeIn();
+                $('#logoutButton').hide();
+            });
+
             checkAndFetchData();
 
-            // Логика для отправки формы логина
             $('#loginForm').submit(function (event) {
-                event.preventDefault(); // Отключаем стандартное поведение формы
+                event.preventDefault();
 
                 const formData = {
                     username: $('#loginUsername').val(),
@@ -123,11 +151,11 @@
                     success: function (response, textStatus, xhr) {
                         const authHeader = xhr.getResponseHeader('Authorization');
                         if (authHeader && authHeader.startsWith('Bearer ')) {
-                            const token = authHeader.substring(7); // Извлекаем токен после "Bearer "
-                            localStorage.setItem('jwtToken', token); // Сохраняем токен
+                            const token = authHeader.substring(7);
+                            localStorage.setItem('jwtToken', token);
                             $('#loginError').text('');
-                            $('#loginModal').fadeOut(); // Закрываем окно логина
-                            checkAndFetchData(); // Загружаем данные пользователя
+                            $('#loginModal').fadeOut();
+                            checkAndFetchData();
                         } else {
                             alert('Login successful, but no token received.');
                         }
@@ -142,9 +170,8 @@
                 });
             });
 
-            // Логика для отправки формы регистрации
             $('#registrationForm').submit(function (event) {
-                event.preventDefault(); // Отключаем стандартное поведение формы
+                event.preventDefault();
 
                 const formData = {
                     username: $('#regUsername').val(),
@@ -160,21 +187,19 @@
                     success: function (response, textStatus, xhr) {
                         const authHeader = xhr.getResponseHeader('Authorization');
                         if (authHeader && authHeader.startsWith('Bearer ')) {
-                            const token = authHeader.substring(7); // Извлекаем токен из заголовка
-                            localStorage.setItem('jwtToken', token); // Сохраняем токен
-                            $('#registrationModal').fadeOut(); // Закрываем модальное окно регистрации
-                            checkAndFetchData(); // Загружаем данные пользователя
+                            const token = authHeader.substring(7);
+                            localStorage.setItem('jwtToken', token);
+                            $('#registrationModal').fadeOut();
+                            checkAndFetchData();
                         } else {
                             alert('Registration successful, but no token received. Please log in.');
                         }
                     },
                     error: function (xhr) {
-                        // Проверяем, есть ли ошибки в теле ответа
                         if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
                             const errorMessages = xhr.responseJSON.errors;
-                            $('#registrationError').html(errorMessages.join('<br>')); // Выводим список ошибок
+                            $('#registrationError').html(errorMessages.join('<br>'));
                         } else if (xhr.status === 409) {
-                            // Обработка ошибки конфликта (например, пользователь уже существует)
                             $('#registrationError').text(xhr.responseJSON.message);
                         } else {
                             $('#registrationError').text('An unexpected error occurred.');
@@ -183,13 +208,11 @@
                 });
             });
 
-            // Переключение на форму регистрации
             $('#switchToRegistration').click(function () {
                 $('#loginModal').fadeOut();
                 $('#registrationModal').fadeIn();
             });
 
-            // Переключение на форму логина
             $('#switchToLogin').click(function () {
                 $('#registrationModal').fadeOut();
                 $('#loginModal').fadeIn();
@@ -198,8 +221,14 @@
     </script>
 </head>
 <body>
-<h1>Task Scheduler</h1>
-<p>Frontend</p>
+<header>
+    <h1>Task Scheduler</h1>
+    <div>
+        <span class="username">Welcome, Guest</span>
+        <button id="logoutButton" style="display: none;">Logout</button>
+    </div>
+</header>
+
 
 <!-- Модальное окно для логина -->
 <div id="loginModal">
@@ -229,6 +258,5 @@
         <p id="switchToLogin" class="switch-link">Already have an account? Login</p>
     </div>
 </div>
-
 </body>
 </html>
