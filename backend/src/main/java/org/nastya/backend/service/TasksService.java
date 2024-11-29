@@ -9,6 +9,10 @@ import org.nastya.backend.model.Task;
 import org.nastya.backend.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class TasksService {
@@ -22,5 +26,11 @@ public class TasksService {
             throw new TaskAlreadyExistsException();
         }
         taskRepository.save(task);
+    }
+
+    @Transactional
+    public List<Task> getAllTask(Integer userId){
+        Optional<List<Task>> tasks = taskRepository.findAllByUserId(userId);
+        return tasks.orElse(new ArrayList<>());
     }
 }

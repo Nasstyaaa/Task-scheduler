@@ -27,14 +27,69 @@
             font-weight: bold;
         }
 
+        /* Стили для контейнеров с задачами */
+        .task-lists {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .task-column {
+            width: 45%;
+            padding: 10px;
+            box-sizing: border-box; /* Для корректного расчета ширины */
+        }
+
+        /* Стили для заголовков столбцов */
+        .task-column h2 {
+            text-align: center;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Стили для задач */
+        .task-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .task-text {
+            margin-top: 10px;
+        }
+
+        .task-time {
+            margin-top: 5px;
+            color: #555;
+        }
+
+        .task-done {
+            color: green;
+            font-weight: bold;
+        }
+
+
         /* Стили для модального окна */
-        #loginModal, #registrationModal {
+        #loginModal, #registrationModal, #taskModal {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            top: 50%; /* Центрируем по вертикали */
+            left: 50%; /* Центрируем по горизонтали */
+            transform: translate(-50%, -50%); /* Смещаем на половину ширины и высоты */
+            width: 600px; /* Увеличиваем ширину модального окна */
+            height: auto;
+            background-color: rgba(0, 0, 0, 0.5); /* Фон затемнения */
             display: none;
             justify-content: center;
             align-items: center;
@@ -43,15 +98,19 @@
 
         .modal-content {
             background-color: #fff;
-            padding: 20px;
+            padding: 30px; /* Увеличиваем отступы внутри модального окна */
             border-radius: 5px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            width: 100%; /* Устанавливаем ширину контента 100% относительно родителя */
+            max-width: 800px; /* Максимальная ширина */
         }
 
+        /* Остальной стиль для формы */
         .modal-content h2 {
             margin-bottom: 20px;
         }
+
 
         .modal-content input {
             margin: 10px 0;
@@ -89,8 +148,8 @@
             function checkAndFetchData() {
                 const token = localStorage.getItem('jwtToken');
                 if (!token) {
-                    $('#loginModal').fadeIn();
-                    $('#logoutButton').hide(); // Hide the logout button if not logged in
+                    $('#loginModal').fadeIn(); // Показать окно логина, если нет токена
+                    $('#logoutButton').hide(); // Скрыть кнопку выхода
                     return;
                 }
 
@@ -104,24 +163,67 @@
                     success: function (data) {
                         if (data.username) {
                             $('.username').text(`Welcome, ${data.username}`);
-                            $('#logoutButton').show();
-                            $('#taskUserId').val(data.id);// Show the logout button if logged in
+                            $('#logoutButton').show(); // Показать кнопку выхода
+                            $('#taskUserId').val(data.id); // Сохранить ID пользователя
+                            fetchTasks(); // Загружать задачи
                         }
                     },
                     error: function (xhr) {
-                        if (xhr.status === 403 && xhr.responseJSON && xhr.responseJSON.message) {
+                        if (xhr.status === 403 || xhr.status === 401) {
+                            // Очистить токен и показать форму логина в случае ошибки авторизации
                             localStorage.removeItem('jwtToken');
-                            $('#loginModal').fadeIn();
-                            $('#loginError').text(xhr.responseJSON.message);
-                            $('#logoutButton').hide();
-                        } else if (xhr.status === 401) {
-                            localStorage.removeItem('jwtToken');
-                            $('#loginModal').fadeIn();
-                            $('#loginError').text('Authentication required. Please log in.');
-                            $('#logoutButton').hide();
+                            $('#loginModal').fadeIn(); // Показать модальное окно логина
+                            $('#loginError').text(xhr.responseJSON?.message || 'Authentication required. Please log in.');
+                            $('#logoutButton').hide(); // Скрыть кнопку выхода
                         } else {
                             alert('Failed to fetch user data. Please try again.');
                         }
+                    }
+                });
+            }
+
+
+            function fetchTasks() {
+                const token = localStorage.getItem('jwtToken');
+                $.ajax({
+                    url: 'http://localhost:8765/tasks',
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    success: function (tasks) {
+                        const pendingTasksContainer = $('.pending-tasks');
+                        const completedTasksContainer = $('.completed-tasks');
+
+                        // Очистка контейнеров
+                        pendingTasksContainer.empty();
+                        completedTasksContainer.empty();
+
+                        if (tasks.length > 0) {
+                            tasks.forEach(function (task) {
+                                const taskHtml = `
+                        <div class="task-item">
+                            <div class="task-header">${task.header}</div>
+                            <div class="task-text">${task.text}</div>
+                            <div class="task-time">Scheduled for: ${new Date(task.time).toLocaleString()}</div>
+                            <div class="task-done">${task.isDone ? 'Completed' : 'Pending'}</div>
+                        </div>
+                    `;
+                                // Добавление задачи в соответствующий контейнер
+                                if (task.isDone) {
+                                    completedTasksContainer.append(taskHtml);
+                                } else {
+                                    pendingTasksContainer.append(taskHtml);
+                                }
+                            });
+                        } else {
+                            pendingTasksContainer.append('<p>No pending tasks available.</p>');
+                            completedTasksContainer.append('<p>No completed tasks available.</p>');
+                        }
+                    },
+                    error: function (xhr) {
+                        alert('Failed to fetch tasks.');
                     }
                 });
             }
@@ -250,6 +352,7 @@
                         alert('Task created successfully.');
                         $('#taskForm')[0].reset();
                         $('#taskModal').fadeOut();
+                        location.reload();
                     },
                     error: function (xhr) {
                         $('#taskError').text(xhr.responseJSON?.message || 'An unexpected error occurred.');
@@ -284,7 +387,20 @@
 </header>
 <main>
     <button id="toggleTaskButton">Create Task</button>
+
+    <!-- Контейнер для задач, разделенных на две колонки -->
+    <div class="task-lists">
+        <div class="task-column">
+            <h2>Pending Tasks</h2>
+            <div class="task-list pending-tasks"></div> <!-- Невыполненные задачи -->
+        </div>
+        <div class="task-column">
+            <h2>Completed Tasks</h2>
+            <div class="task-list completed-tasks"></div> <!-- Выполненные задачи -->
+        </div>
+    </div>
 </main>
+
 
 <!-- Форма для создания задачи -->
 <div id="taskModal" style="display: none;">
@@ -300,7 +416,6 @@
         <p id="taskError"></p>
     </div>
 </div>
-
 
 
 <!-- Модальное окно для логина -->
