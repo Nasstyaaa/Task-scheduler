@@ -12,18 +12,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Task {
     @Id
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String header;
 
     @Column(nullable = false)
     private String text;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Integer userId;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private boolean isDone;
 
-    @Column(nullable = false)
+    @Column(name = "done_time", nullable = false)
     private LocalDateTime time;
 }

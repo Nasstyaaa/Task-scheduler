@@ -104,7 +104,8 @@
                     success: function (data) {
                         if (data.username) {
                             $('.username').text(`Welcome, ${data.username}`);
-                            $('#logoutButton').show(); // Show the logout button if logged in
+                            $('#logoutButton').show();
+                            $('#taskUserId').val(data.id);// Show the logout button if logged in
                         }
                     },
                     error: function (xhr) {
@@ -217,6 +218,59 @@
                 $('#registrationModal').fadeOut();
                 $('#loginModal').fadeIn();
             });
+
+
+            // Обработчик формы создания задачи
+            $('#taskForm').submit(function (event) {
+                event.preventDefault();
+
+                const token = localStorage.getItem('jwtToken');
+                if (!token) {
+                    alert('You must be logged in to create a task.');
+                    return;
+                }
+
+                const taskData = {
+                    header: $('#taskHeader').val(),
+                    text: $('#taskText').val(),
+                    userId: parseInt($('#taskUserId').val(), 10),
+                    time: $('#taskTime').val(),
+                    isDone: false
+                };
+
+                $.ajax({
+                    url: 'http://localhost:8765/tasks',
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(taskData),
+                    success: function (response) {
+                        alert('Task created successfully.');
+                        $('#taskForm')[0].reset();
+                        $('#taskModal').fadeOut();
+                    },
+                    error: function (xhr) {
+                        $('#taskError').text(xhr.responseJSON?.message || 'An unexpected error occurred.');
+                    }
+                });
+            });
+
+            $('#toggleTaskButton').click(function () {
+                $('#taskError').text(''); // Очистить текст ошибки
+                $('#taskForm')[0].reset(); // Сбросить данные формы
+                $('#taskModal').fadeToggle(); // Переключает между "показать" и "скрыть"
+            });
+
+            $('#taskModal').click(function (event) {
+                if (event.target.id === 'taskModal') {
+                    $('#taskError').text(''); // Очистить текст ошибки
+                    $('#taskForm')[0].reset(); // Сбросить данные формы
+                    $('#taskModal').fadeOut();
+                }
+            });
+
         });
     </script>
 </head>
@@ -228,6 +282,25 @@
         <button id="logoutButton" style="display: none;">Logout</button>
     </div>
 </header>
+<main>
+    <button id="toggleTaskButton">Create Task</button>
+</main>
+
+<!-- Форма для создания задачи -->
+<div id="taskModal" style="display: none;">
+    <div class="modal-content">
+        <h2>Create Task</h2>
+        <form id="taskForm">
+            <input type="text" id="taskHeader" name="header" placeholder="Task Header" required>
+            <textarea id="taskText" name="text" placeholder="Task Description" required></textarea>
+            <input type="hidden" id="taskUserId" name="userId">
+            <input type="datetime-local" id="taskTime" name="time" required>
+            <button type="submit">Create Task</button>
+        </form>
+        <p id="taskError"></p>
+    </div>
+</div>
+
 
 
 <!-- Модальное окно для логина -->
