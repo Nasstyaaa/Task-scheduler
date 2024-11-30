@@ -33,4 +33,10 @@ public class TasksService {
         Optional<List<Task>> tasks = taskRepository.findAllByUserId(userId);
         return tasks.orElse(new ArrayList<>());
     }
+
+    @Transactional
+    public void updateTask(TaskRequest taskRequest){
+        Task task = new ModelMapper().map(taskRequest, Task.class);
+        taskRepository.save(task);
+    }
 }

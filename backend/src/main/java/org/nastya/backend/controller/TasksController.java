@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.nastya.backend.dto.TaskRequest;
 import org.nastya.backend.exception.TaskAlreadyExistsException;
 import org.nastya.backend.model.Task;
-import org.nastya.backend.model.User;
 import org.nastya.backend.security.CustomUserDetails;
 import org.nastya.backend.service.TasksService;
 import org.springframework.http.HttpStatus;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/tasks")
@@ -26,10 +24,10 @@ public class TasksController {
     private final TasksService tasksService;
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> add(@RequestBody TaskRequest taskRequest){
+    public ResponseEntity<Map<String, String>> add(@RequestBody TaskRequest taskRequest){
         try{
             tasksService.addTask(taskRequest);
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "The task was successfully created"));
+            return ResponseEntity.ok(Map.of("message", "The task was successfully created"));
         } catch (TaskAlreadyExistsException e){
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         }
@@ -40,7 +38,14 @@ public class TasksController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         var principal = (CustomUserDetails) authentication.getPrincipal();
         List<Task> tasks = tasksService.getAllTask(principal.getId());
-        return ResponseEntity.status(HttpStatus.OK).body(tasks);
+        return ResponseEntity.ok(tasks);
     }
+
+    @PatchMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Map<String, String>> update(@RequestBody TaskRequest taskRequest){
+        tasksService.updateTask(taskRequest);
+        return ResponseEntity.ok(Map.of("message", "The task was successfully updated"));
+    }
+
 
 }
