@@ -203,13 +203,20 @@
                         if (tasks.length > 0) {
                             tasks.forEach(function (task) {
                                 const taskHtml = `
-                        <div class="task-item">
-                            <div class="task-header">${task.header}</div>
-                            <div class="task-text">${task.text}</div>
-                            <div class="task-time">Scheduled for: ${new Date(task.time).toLocaleString()}</div>
-                            <div class="task-done">${task.isDone ? 'Completed' : 'Pending'}</div>
-                        </div>
-                    `;
+                                    <div class="task-item" data-task-id="${task.id}">
+                                        <div class="task-header">${task.header}</div>
+                                        <div class="task-text">
+                                            <span class="task-description">${task.text}</span>
+                                            <button class="edit-task-btn">✏️</button>
+                                        </div>
+                                        <div class="task-time">Scheduled for: ${new Date(task.time).toLocaleString()}</div>
+                                        <div>
+                                            <label>
+                                                <input type="checkbox" class="task-status" ${task.isDone ? 'checked' : ''}> Completed
+                                            </label>
+                                        </div>
+                                    </div>
+                                `;
                                 // Добавление задачи в соответствующий контейнер
                                 if (task.isDone) {
                                     completedTasksContainer.append(taskHtml);
@@ -373,6 +380,51 @@
                     $('#taskModal').fadeOut();
                 }
             });
+
+            // Обработчик изменения статуса задачи
+            $('.task-list').on('change', '.task-status', function () {
+                const taskId = $(this).closest('.task-item').data('task-id');
+                const isDone = $(this).is(':checked');
+
+                updateTask(taskId, { isDone });
+            });
+
+            // Обработчик редактирования описания задачи
+            $('.task-list').on('click', '.edit-task-btn', function () {
+                const taskItem = $(this).closest('.task-item');
+                const taskId = taskItem.data('task-id');
+                const descriptionSpan = taskItem.find('.task-description');
+
+                const currentText = descriptionSpan.text();
+                const newText = prompt('Edit task description:', currentText);
+
+                if (newText && newText !== currentText) {
+                    descriptionSpan.text(newText);
+                    updateTask(taskId, { text: newText });
+                }
+            });
+
+            // Функция обновления задачи
+            function updateTask(taskId, updatedFields) {
+                const token = localStorage.getItem('jwtToken');
+
+                $.ajax({
+                    url: 'http://localhost:8765/tasks',
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({ id: taskId, ...updatedFields }),
+                    success: function () {
+                        alert('Task updated successfully!');
+                        fetchTasks();
+                    },
+                    error: function () {
+                        alert('Failed to update task. Please try again.');
+                    }
+                });
+            }
 
         });
     </script>
