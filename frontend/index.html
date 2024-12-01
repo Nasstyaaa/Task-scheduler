@@ -224,6 +224,7 @@
                                                     <div class="task-text">
                                                         <span class="task-description">${task.text}</span>
                                                         <button class="edit-task-btn">✏️</button>
+                                                        <button class="delete-task-btn">🗑️</button>
                                                     </div>
                                                     ${taskTime}
                                                     <div>
@@ -420,6 +421,16 @@
                 }
             });
 
+            // Обработчик удаления задачи
+            $('.task-list').on('click', '.delete-task-btn', function () {
+                const taskId = $(this).closest('.task-item').data('task-id');
+
+                if (confirm('Are you sure you want to delete this task?')) {
+                    deleteTask(taskId);
+                }
+            });
+
+
             // Функция обновления задачи
             function updateTask(taskId, updatedFields) {
                 const token = localStorage.getItem('jwtToken');
@@ -464,6 +475,26 @@
                 return isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
             }
 
+
+            function deleteTask(taskId) {
+                const token = localStorage.getItem('jwtToken');
+
+                $.ajax({
+                    url: `http://localhost:8765/tasks`,
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(taskId),
+                    success: function (response) {
+                        fetchTasks();
+                    },
+                    error: function (xhr) {
+                        alert('Failed to delete task. Please try again.');
+                    }
+                });
+            }
 
         });
     </script>

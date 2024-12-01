@@ -38,4 +38,9 @@ public class TasksService {
         Task task = new ModelMapper().map(taskRequestPatch, Task.class);
         taskRepository.save(task);
     }
+
+    @Transactional
+    public void deleteTask(Integer idTask){
+        taskRepository.deleteById(String.valueOf(idTask));
+    }
 }

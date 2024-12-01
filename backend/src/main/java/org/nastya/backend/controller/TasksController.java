@@ -48,4 +48,10 @@ public class TasksController {
         return ResponseEntity.ok(Map.of("message", "The task was successfully updated"));
     }
 
+    @DeleteMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Map<String, String>> delete(@RequestBody Integer taskId){
+        tasksService.deleteTask(taskId);
+        return ResponseEntity.ok(Map.of("message", "The task was successfully deleted"));
+    }
+
 }
