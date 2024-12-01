@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.nastya.backend.dto.RegistrationRequest;
 import org.nastya.backend.dto.RegistrationResponse;
 import org.nastya.backend.exception.UserAlreadyExistsException;
+import org.nastya.backend.kafka.KafkaProducer;
 import org.nastya.backend.model.User;
 import org.nastya.backend.repository.UserRepository;
 import org.nastya.backend.security.CustomUserDetails;
@@ -33,6 +34,7 @@ public class RegistrationController {
 
     private final RegistrationService registrationService;
     private final JwtIssuer jwtIssuer;
+    private final KafkaProducer kafkaProducer;
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> register(@RequestBody @Valid RegistrationRequest request, BindingResult bindingResult){
@@ -61,6 +63,7 @@ public class RegistrationController {
     public ResponseEntity<?> getUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         var principal = (CustomUserDetails) authentication.getPrincipal();
+        kafkaProducer.sendMessage("User with name " + principal.getUsername() + " logged in");
         return ResponseEntity.ok(Map.of(
                 "id", principal.getId(),
                 "username", principal.getUsername(),
