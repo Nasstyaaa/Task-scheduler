@@ -9,5 +9,9 @@
         <module name="Task-scheduler" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="email-sender.main" target="21" />
+      <module name="email-sender.test" target="21" />
+    </bytecodeTargetLevel>
   </component>
 </project>

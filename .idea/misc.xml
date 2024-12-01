@@ -4,6 +4,7 @@
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$/api-gateway" />
     <file type="web" url="file://$PROJECT_DIR$/backend" />
+    <file type="web" url="file://$PROJECT_DIR$/email-sender" />
     <file type="web" url="file://$PROJECT_DIR$/eureka-server" />
   </component>
   <component name="MavenProjectsManager">
