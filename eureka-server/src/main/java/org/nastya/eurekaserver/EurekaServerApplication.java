@@ -1,6 +1,7 @@
 package org.nastya.eurekaserver;
 
 import jakarta.servlet.Filter;
+import jakarta.ws.rs.core.HttpHeaders;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -28,6 +29,7 @@ public class EurekaServerApplication {
 		config.addAllowedOrigin("http://localhost:80");
 		config.addAllowedMethod("*");
 		config.addAllowedHeader("Access-Control-Allow-Origin");
+		config.addExposedHeader(HttpHeaders.AUTHORIZATION);
 		source.registerCorsConfiguration("/**", config);
 		FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<Filter>(new CorsFilter(source));
 		bean.setOrder(Ordered.HIGHEST_PRECEDENCE);

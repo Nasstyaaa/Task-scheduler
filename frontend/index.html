@@ -200,23 +200,39 @@
                         pendingTasksContainer.empty();
                         completedTasksContainer.empty();
 
+                        const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; // Получаем часовой пояс пользователя
+
                         if (tasks.length > 0) {
                             tasks.forEach(function (task) {
+                                // Если задача выполнена и есть время
+                                const taskTime = task.isDone
+                                    ? `<div class="task-time">Scheduled for: ${new Date(task.time).toLocaleString('en-US', {
+                                        timeZone: userTimeZone,
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    })}</div>` // Отображаем время с учетом часового пояса
+                                    : ''; // Время отображается только для выполненных задач
+
                                 const taskHtml = `
-                                    <div class="task-item" data-task-id="${task.id}">
-                                        <div class="task-header">${task.header}</div>
-                                        <div class="task-text">
-                                            <span class="task-description">${task.text}</span>
-                                            <button class="edit-task-btn">✏️</button>
-                                        </div>
-                                        <div class="task-time">Scheduled for: ${new Date(task.time).toLocaleString()}</div>
-                                        <div>
-                                            <label>
-                                                <input type="checkbox" class="task-status" ${task.isDone ? 'checked' : ''}> Completed
-                                            </label>
-                                        </div>
-                                    </div>
-                                `;
+                                                <div class="task-item" data-task-id="${task.id}">
+                                                    <div class="task-header">${task.header}</div>
+                                                    <div class="task-text">
+                                                        <span class="task-description">${task.text}</span>
+                                                        <button class="edit-task-btn">✏️</button>
+                                                    </div>
+                                                    ${taskTime}
+                                                    <div>
+                                                        <label>
+                                                            <input type="checkbox" class="task-status" ${task.isDone ? 'checked' : ''}> Completed
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            `;
                                 // Добавление задачи в соответствующий контейнер
                                 if (task.isDone) {
                                     completedTasksContainer.append(taskHtml);
@@ -343,7 +359,6 @@
                     header: $('#taskHeader').val(),
                     text: $('#taskText').val(),
                     userId: parseInt($('#taskUserId').val(), 10),
-                    time: $('#taskTime').val(),
                     isDone: false
                 };
 
@@ -356,7 +371,6 @@
                     },
                     data: JSON.stringify(taskData),
                     success: function (response) {
-                        alert('Task created successfully.');
                         $('#taskForm')[0].reset();
                         $('#taskModal').fadeOut();
                         location.reload();
@@ -366,6 +380,7 @@
                     }
                 });
             });
+
 
             $('#toggleTaskButton').click(function () {
                 $('#taskError').text(''); // Очистить текст ошибки
@@ -385,8 +400,9 @@
             $('.task-list').on('change', '.task-status', function () {
                 const taskId = $(this).closest('.task-item').data('task-id');
                 const isDone = $(this).is(':checked');
+                const currentTime = isDone ? new Date().toISOString() : null; // Если задача помечена как выполненная, добавляем текущее время
 
-                updateTask(taskId, { isDone });
+                updateTask(taskId, { isDone, time: currentTime });
             });
 
             // Обработчик редактирования описания задачи
@@ -407,7 +423,22 @@
             // Функция обновления задачи
             function updateTask(taskId, updatedFields) {
                 const token = localStorage.getItem('jwtToken');
+                const taskElement = $(`[data-task-id="${taskId}"]`);
 
+                // Извлечение существующих данных задачи из DOM
+                const existingTask = {
+                    id: taskId,
+                    header: taskElement.find('.task-header').text(),
+                    text: taskElement.find('.task-description').text(),
+                    time: getValidTime(taskElement.find('.task-time').text()), // Use a helper function to check the date
+                    isDone: taskElement.find('.task-status').is(':checked'),
+                    userId: parseInt($('#taskUserId').val(), 10) // ID пользователя
+                };
+
+                // Объединение существующих данных с обновлениями
+                const updatedTask = { ...existingTask, ...updatedFields };
+
+                // Отправка PATCH-запроса на сервер
                 $.ajax({
                     url: 'http://localhost:8765/tasks',
                     method: 'PATCH',
@@ -415,16 +446,24 @@
                         'Authorization': 'Bearer ' + token,
                         'Content-Type': 'application/json'
                     },
-                    data: JSON.stringify({ id: taskId, ...updatedFields }),
+                    data: JSON.stringify(updatedTask),
                     success: function () {
-                        alert('Task updated successfully!');
-                        fetchTasks();
+                        fetchTasks(); // Перезагружаем задачи
                     },
                     error: function () {
                         alert('Failed to update task. Please try again.');
                     }
                 });
             }
+
+            // Helper function to safely parse the date
+            function getValidTime(timeText) {
+                const time = timeText.replace('Scheduled for: ', '').trim();
+                const parsedDate = new Date(time);
+                // Return the ISO string if it's a valid date, otherwise null
+                return isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+            }
+
 
         });
     </script>
@@ -462,7 +501,6 @@
             <input type="text" id="taskHeader" name="header" placeholder="Task Header" required>
             <textarea id="taskText" name="text" placeholder="Task Description" required></textarea>
             <input type="hidden" id="taskUserId" name="userId">
-            <input type="datetime-local" id="taskTime" name="time" required>
             <button type="submit">Create Task</button>
         </form>
         <p id="taskError"></p>

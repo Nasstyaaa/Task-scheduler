@@ -3,8 +3,8 @@ package org.nastya.backend.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.nastya.backend.dto.TaskRequest;
-import org.nastya.backend.exception.TaskAlreadyExistsException;
+import org.nastya.backend.dto.TaskRequestPatch;
+import org.nastya.backend.dto.TaskRequestPost;
 import org.nastya.backend.model.Task;
 import org.nastya.backend.repository.TaskRepository;
 import org.springframework.stereotype.Service;
@@ -20,12 +20,11 @@ public class TasksService {
     private final TaskRepository taskRepository;
 
     @Transactional
-    public void addTask(TaskRequest taskRequest) {
-        Task task = new ModelMapper().map(taskRequest, Task.class);
-        if (taskRepository.existsTaskByHeader(task.getHeader())) {
-            throw new TaskAlreadyExistsException();
-        }
-        taskRepository.save(task);
+    public void addTask(TaskRequestPost taskRequestPost) {
+        Task task = new ModelMapper().map(taskRequestPost, Task.class);
+        task.setId(null);
+        task.setIsDone(false);
+        taskRepository.saveAndFlush(task);
     }
 
     @Transactional
@@ -35,8 +34,8 @@ public class TasksService {
     }
 
     @Transactional
-    public void updateTask(TaskRequest taskRequest){
-        Task task = new ModelMapper().map(taskRequest, Task.class);
+    public void updateTask(TaskRequestPatch taskRequestPatch) {
+        Task task = new ModelMapper().map(taskRequestPatch, Task.class);
         taskRepository.save(task);
     }
 }

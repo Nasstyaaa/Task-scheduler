@@ -12,7 +12,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Task {
     @Id
-    @Column(nullable = false, unique = true)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false)
     private String header;
 
     @Column(nullable = false)
@@ -22,8 +25,8 @@ public class Task {
     private Integer userId;
 
     @Column(name = "status", nullable = false)
-    private boolean isDone;
+    private Boolean isDone;
 
-    @Column(name = "done_time", nullable = false)
+    @Column(name = "done_time")
     private LocalDateTime time;
 }

@@ -25,7 +25,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtToUserDetailsConverter jwtToUserDetailsConverter;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws IOException {
         try {
             extractTokenFromRequest(request)
                     .map(jwtDecoder::decode)
@@ -35,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            throw new InvalidJwtTokenException();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, new InvalidJwtTokenException().getMessage());
         }
     }
 

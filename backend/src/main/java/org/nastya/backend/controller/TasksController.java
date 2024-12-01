@@ -1,7 +1,8 @@
 package org.nastya.backend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.nastya.backend.dto.TaskRequest;
+import org.nastya.backend.dto.TaskRequestPatch;
+import org.nastya.backend.dto.TaskRequestPost;
 import org.nastya.backend.exception.TaskAlreadyExistsException;
 import org.nastya.backend.model.Task;
 import org.nastya.backend.security.CustomUserDetails;
@@ -24,9 +25,9 @@ public class TasksController {
     private final TasksService tasksService;
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Map<String, String>> add(@RequestBody TaskRequest taskRequest){
+    public ResponseEntity<Map<String, String>> add(@RequestBody TaskRequestPost taskRequestPost){
         try{
-            tasksService.addTask(taskRequest);
+            tasksService.addTask(taskRequestPost);
             return ResponseEntity.ok(Map.of("message", "The task was successfully created"));
         } catch (TaskAlreadyExistsException e){
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
@@ -42,10 +43,9 @@ public class TasksController {
     }
 
     @PatchMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<Map<String, String>> update(@RequestBody TaskRequest taskRequest){
-        tasksService.updateTask(taskRequest);
+    public ResponseEntity<Map<String, String>> update(@RequestBody TaskRequestPatch taskRequestPatch){
+        tasksService.updateTask(taskRequestPatch);
         return ResponseEntity.ok(Map.of("message", "The task was successfully updated"));
     }
-
 
 }

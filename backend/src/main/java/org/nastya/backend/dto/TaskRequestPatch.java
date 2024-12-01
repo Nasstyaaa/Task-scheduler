@@ -1,13 +1,17 @@
 package org.nastya.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+
 @Data
-public class TaskRequest {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class TaskRequestPatch {
+    private Integer id;
     private String header;
     private String text;
     private Integer userId;
-    private boolean isDone;
+    private Boolean isDone;
     private LocalDateTime time;
 }
