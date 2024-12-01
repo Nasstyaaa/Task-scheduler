@@ -6,59 +6,119 @@
     <title>Task Scheduler</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
+        /* Основные шрифты */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
         /* Стили для хедера */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #007BFF;
+            background-color: #2C3E50;
             color: #fff;
-            padding: 10px 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         header h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 600;
         }
 
         header .username {
             font-size: 1rem;
-            font-weight: bold;
+            font-weight: 500;
         }
 
-        /* Стили для контейнеров с задачами */
+        /* Кнопки */
+        button {
+            padding: 10px 15px;
+            background-color: #34495E;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2C3E50;
+        }
+
+        /* Основной контент */
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* Контейнер для задач */
         .task-lists {
             display: flex;
             justify-content: space-between;
+            gap: 20px;  /* Расстояние между колонками */
             margin-top: 20px;
         }
 
+        /* Стиль для каждой колонки с задачами */
         .task-column {
-            width: 45%;
-            padding: 10px;
-            box-sizing: border-box; /* Для корректного расчета ширины */
+            flex: 1; /* Каждая колонка занимает равную ширину */
+            padding: 15px;
+            background-color: #ECF0F1;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Стили для заголовков столбцов */
+        /* Стиль заголовков колонок */
         .task-column h2 {
             text-align: center;
-            background-color: #f1f1f1;
-            padding: 10px;
+            background-color: #2C3E50;
+            padding: 12px;
             border-radius: 5px;
             margin-bottom: 20px;
-            font-size: 1.2rem;
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 1.4rem;
+            color: white;
+            font-weight: 600;
         }
 
-        /* Стили для задач */
+        /* Размещение кнопки */
+        #toggleTaskButton {
+            margin: 15px auto;
+            display: block;
+            background-color: #2C3E50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #toggleTaskButton:hover {
+            background-color: #34495E;
+        }
+
+        /* Задачи */
         .task-item {
-            border: 1px solid #ddd;
+            border: 1px solid #BDC3C7;
             margin: 10px 0;
             padding: 15px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            background-color: #fff;
+        }
+
+        .task-item:hover {
+            transform: scale(1.02);
         }
 
         .task-header {
@@ -66,30 +126,25 @@
             font-weight: bold;
         }
 
-        .task-text {
-            margin-top: 10px;
-        }
-
         .task-time {
             margin-top: 5px;
-            color: #555;
+            color: #7F8C8D;
         }
 
         .task-done {
-            color: green;
+            color: #27AE60;
             font-weight: bold;
         }
 
-
-        /* Стили для модального окна */
+        /* Модальные окна */
         #loginModal, #registrationModal, #taskModal {
             position: fixed;
-            top: 50%; /* Центрируем по вертикали */
-            left: 50%; /* Центрируем по горизонтали */
-            transform: translate(-50%, -50%); /* Смещаем на половину ширины и высоты */
-            width: 600px; /* Увеличиваем ширину модального окна */
-            height: auto;
-            background-color: rgba(0, 0, 0, 0.5); /* Фон затемнения */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background-color: rgba(0, 0, 0, 0.7);
             display: none;
             justify-content: center;
             align-items: center;
@@ -98,49 +153,69 @@
 
         .modal-content {
             background-color: #fff;
-            padding: 30px; /* Увеличиваем отступы внутри модального окна */
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             text-align: center;
-            width: 100%; /* Устанавливаем ширину контента 100% относительно родителя */
-            max-width: 800px; /* Максимальная ширина */
+            width: 100%;
         }
 
-        /* Остальной стиль для формы */
         .modal-content h2 {
             margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
         }
 
-
-        .modal-content input {
+        .modal-content input, .modal-content textarea {
             margin: 10px 0;
             padding: 10px;
             width: 100%;
             box-sizing: border-box;
+            border: 1px solid #BDC3C7;
+            border-radius: 5px;
+        }
+
+        .modal-content textarea {
+            resize: none;
+            height: 80px;
         }
 
         .modal-content button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            width: 100%;
         }
 
-        .modal-content button:hover {
-            background-color: #0056b3;
+        /* Переходы */
+        #loginModal.active, #registrationModal.active, #taskModal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .modal-content p {
-            color: red;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
 
         .switch-link {
             margin-top: 10px;
             cursor: pointer;
             color: #007BFF;
+            font-size: 0.9rem;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            .task-lists {
+                flex-direction: column;
+            }
+
+            .task-column {
+                flex: 1 1 100%;
+                margin-bottom: 20px;
+            }
         }
     </style>
     <script>
@@ -508,24 +583,23 @@
     </div>
 </header>
 <main>
-    <button id="toggleTaskButton">Create Task</button>
-
-    <!-- Контейнер для задач, разделенных на две колонки -->
     <div class="task-lists">
+        <!-- Столбец для невыполненных заданий -->
         <div class="task-column">
+            <button id="toggleTaskButton">Create Task</button>
             <h2>Pending Tasks</h2>
-            <div class="task-list pending-tasks"></div> <!-- Невыполненные задачи -->
+            <div class="task-list pending-tasks"></div>
         </div>
+        <!-- Столбец для выполненных заданий -->
         <div class="task-column">
             <h2>Completed Tasks</h2>
-            <div class="task-list completed-tasks"></div> <!-- Выполненные задачи -->
+            <div class="task-list completed-tasks"></div>
         </div>
     </div>
 </main>
 
-
-<!-- Форма для создания задачи -->
-<div id="taskModal" style="display: none;">
+<!-- Модальные окна -->
+<div id="taskModal">
     <div class="modal-content">
         <h2>Create Task</h2>
         <form id="taskForm">
@@ -538,8 +612,6 @@
     </div>
 </div>
 
-
-<!-- Модальное окно для логина -->
 <div id="loginModal">
     <div class="modal-content">
         <h2>Login</h2>
@@ -553,7 +625,6 @@
     </div>
 </div>
 
-<!-- Модальное окно для регистрации -->
 <div id="registrationModal">
     <div class="modal-content">
         <h2>Register</h2>
