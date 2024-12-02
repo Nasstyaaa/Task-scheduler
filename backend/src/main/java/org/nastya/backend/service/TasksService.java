@@ -41,6 +41,6 @@ public class TasksService {
 
     @Transactional
     public void deleteTask(Integer idTask){
-        taskRepository.deleteById(String.valueOf(idTask));
+        taskRepository.deleteById(idTask);
     }
 }

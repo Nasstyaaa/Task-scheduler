@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 
-public interface TaskRepository  extends JpaRepository<Task, String> {
-    Boolean existsTaskByHeader(String header);
+public interface TaskRepository  extends JpaRepository<Task, Integer> {
     Optional<List<Task>> findAllByUserId(Integer userId);
 }
