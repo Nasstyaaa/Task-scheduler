@@ -1,5 +1,6 @@
 package org.nastya.backend.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,7 @@ public class RegistrationController {
 
             RegistrationResponse response = registrationService.register(request);
             String jwt = jwtIssuer.issue(response.getId(), response.getUsername(), response.getEmail());
+            kafkaProducer.sendMessage(response.getEmail());
             return ResponseEntity.ok()
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
                     .build();
@@ -63,7 +65,6 @@ public class RegistrationController {
     public ResponseEntity<?> getUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         var principal = (CustomUserDetails) authentication.getPrincipal();
-        kafkaProducer.sendMessage("User with name " + principal.getUsername() + " logged in");
         return ResponseEntity.ok(Map.of(
                 "id", principal.getId(),
                 "username", principal.getUsername(),
