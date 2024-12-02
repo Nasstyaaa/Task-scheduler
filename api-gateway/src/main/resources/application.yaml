@@ -31,11 +31,6 @@ spring:
           predicates:
             - Path=/auth/login
 
-        - id: email-sender-service
-          uri: lb://email-sender
-          predicates:
-            - Path=/email
-
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
