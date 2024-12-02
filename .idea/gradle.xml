@@ -7,7 +7,7 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$/Scheduler" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/Scheduler" />
+            <option value="$PROJECT_DIR$/scheduler" />
           </set>
         </option>
       </GradleProjectSettings>
